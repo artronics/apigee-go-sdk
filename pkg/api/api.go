@@ -4,18 +4,26 @@ import (
 	"fmt"
 	"github.com/artronics/apigee/pkg"
 	"io"
-	"log"
 	"net/http"
+	"net/url"
+	"strconv"
 )
 
 var httpClient = http.Client{}
 
-func List(config pkg.ApigeeConfig, resource string) (io.ReadCloser, error) {
+type ApigeeApiConfig struct {
+	pkg.ApigeeConfig
+	Name string
+}
+
+func Get(config pkg.ApigeeConfig, resourceType pkg.ApigeeResource, resource interface{}) (io.ReadCloser, error) {
 	var apps io.ReadCloser
 
-	if resource == "api" {
-		baseUrl := fmt.Sprintf("%s/organizations/%s/apis", config.BaseUrl, config.Organization)
-		log.Println(baseUrl)
+	switch resourceType {
+	case pkg.ApigeeApi:
+		data := resource.(pkg.Api)
+
+		baseUrl := fmt.Sprintf("%s/organizations/%s/apis/%s", config.BaseUrl, data.Organization.Name, data.Name)
 
 		req, err := http.NewRequest("GET", baseUrl, nil)
 		if err != nil {
@@ -24,77 +32,23 @@ func List(config pkg.ApigeeConfig, resource string) (io.ReadCloser, error) {
 
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", config.Token))
 
+		q := url.Values{}
+		q.Add("includeMetaData", strconv.FormatBool(data.IncludeMetaData))
+		q.Add("includeRevisions", strconv.FormatBool(data.IncludeRevisions))
+		req.URL.RawQuery = q.Encode()
+
 		res, err := httpClient.Do(req)
 		if err != nil {
 			return apps, err
 		}
 		if res.StatusCode != 200 {
-			return apps, fmt.Errorf("GET request failed with status code %d", res.StatusCode)
+			return apps, fmt.Errorf("GET request failed - %s", res.Status)
 		}
 		return res.Body, nil
 
-		/*		body, err := ioutil.ReadAll(res.Body)
-				if err != nil {
-					return apps, err
-				}
-
-				err = json.Unmarshal(body, &apps)
-				if err != nil {
-					return apps, err
-				}
-
-				return apps, nil
-		*/
+	default:
+		panic("unsupported Apigee resource type")
 	}
 
 	return apps, nil
 }
-
-type ApigeeApp struct {
-	pkg.ApigeeConfig
-	organization string
-}
-
-/*
-func NewApigeeApp(config ApigeeConfig) (*ApigeeApp, error) {
-	if config.organization == "" {
-		return nil, errors.New("organization is required, but it was not provided")
-	}
-	baseUrl := fmt.Sprintf("%s/organizations/%s/apihs", config.baseUrl, config.organization)
-	return &ApigeeApp{
-		C:  config,
-		baseUrl: baseUrl,
-	}, nil
-}
-*/
-/*
-func (a ApigeeApp) list() (Apps, error) {
-	var apps Apps
-
-	req, err := http.NewRequest("GET", a.baseUrl, nil)
-	if err != nil {
-		return apps, err
-	}
-
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.C.token))
-
-	res, err := httpClient.Do(req)
-	if err != nil {
-		return apps, err
-	}
-	if res.StatusCode != 200 {
-		return apps, fmt.Errorf("GET request failed with status code %d", res.StatusCode)
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return apps, err
-	}
-
-	err = json.Unmarshal(body, &apps)
-	if err != nil {
-		return apps, err
-	}
-
-	return apps, nil
-}*/

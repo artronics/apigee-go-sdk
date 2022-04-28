@@ -1,33 +1,49 @@
 package cmd
 
 import (
+	"fmt"
+	"github.com/artronics/apigee/pkg"
 	"github.com/artronics/apigee/pkg/api"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
+	"strconv"
 )
 
-// apiCmd represents the api command
 var apiCmd = &cobra.Command{
 	Use:   "api",
 	Short: "Manage API resource",
 	Long:  ``,
-	PreRun: func(cmd *cobra.Command, args []string) {
-		config.Organization = cmd.Flags().Lookup("organization").Value.String()
-	},
 	Run: func(cmd *cobra.Command, args []string) {
-		switch cmd.Parent() {
-		case getCmd:
-			a, err := api.List(config, "api")
+		var apiData pkg.Api
+
+		getApi := func() string {
+			apiData.Organization.Name = cmd.Flags().Lookup("organization").Value.String()
+
+			resBody, err := api.Get(config, pkg.ApigeeApi, apiData)
 			if err != nil {
 				log.Fatal(err.Error())
 			}
-			body, err := ioutil.ReadAll(a)
+			body, err := ioutil.ReadAll(resBody)
 			if err != nil {
 				log.Fatal(err.Error())
 			}
 
-			log.Printf(string(body))
+			return string(body)
+		}
+
+		switch cmd.Parent() {
+		case getCmd:
+			apiData.Name = cmd.Flags().Lookup("name").Value.String()
+			fmt.Printf(getApi())
+
+		case listCmd:
+			iMetadata, _ := strconv.ParseBool(cmd.Flags().Lookup("includeMetaData").Value.String())
+			iRevisions, _ := strconv.ParseBool(cmd.Flags().Lookup("includeRevisions").Value.String())
+			apiData.IncludeMetaData = iMetadata
+			apiData.IncludeRevisions = iRevisions
+
+			fmt.Printf(getApi())
 		case createCmd:
 			log.Printf("creating api")
 
@@ -38,13 +54,27 @@ var apiCmd = &cobra.Command{
 }
 
 func init() {
-	apiCmd.Flags().StringP("name", "n", "", "API name")
-	_ = apiCmd.MarkFlagRequired("name")
-	apiCmd.Flags().StringP("organization", "o", "", "Apigee account organization")
-	_ = apiCmd.MarkFlagRequired("organization")
-
 	getApiCmd := *apiCmd
+	commonFlags(&getApiCmd)
+	getApiCmd.Flags().StringP("name", "n", "", "API name")
+	_ = getApiCmd.MarkFlagRequired("name")
+
+	listApiCmd := *apiCmd
+	commonFlags(&listApiCmd)
+	listApiCmd.Flags().Bool("includeMetaData", false, "include metadata")
+	listApiCmd.Flags().Bool("includeRevisions", false, "include revisions")
+
 	createApiCmd := *apiCmd
-	createCmd.AddCommand(&createApiCmd)
+	commonFlags(&createApiCmd)
+	createApiCmd.Flags().StringP("name", "n", "", "API name")
+	_ = createApiCmd.MarkFlagRequired("name")
+
 	getCmd.AddCommand(&getApiCmd)
+	listCmd.AddCommand(&listApiCmd)
+	createCmd.AddCommand(&createApiCmd)
+}
+
+func commonFlags(cmd *cobra.Command) {
+	cmd.Flags().StringP("organization", "o", "", "Apigee account organization")
+	_ = cmd.MarkFlagRequired("organization")
 }
