@@ -2,8 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/artronics/apigee/pkg"
-	"github.com/artronics/apigee/pkg/api"
+	"github.com/artronics/apigee/api"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
@@ -15,12 +14,12 @@ var apiCmd = &cobra.Command{
 	Short: "Manage API resource",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		var apiData pkg.Api
+		var apiData api.Api
 
 		getApi := func() string {
 			apiData.Organization.Name = cmd.Flags().Lookup("organization").Value.String()
 
-			resBody, err := api.Get(config, pkg.ApigeeApi, apiData)
+			resBody, err := api.Get(config, api.ApigeeApi, apiData)
 			if err != nil {
 				log.Fatal(err.Error())
 			}

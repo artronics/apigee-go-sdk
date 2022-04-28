@@ -1,4 +1,4 @@
-package pkg
+package api
 
 type ApigeeConfig struct {
 	Token   string

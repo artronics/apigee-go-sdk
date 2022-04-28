@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"github.com/artronics/apigee/pkg"
 	"io"
 	"net/http"
 	"net/url"
@@ -11,17 +10,12 @@ import (
 
 var httpClient = http.Client{}
 
-type ApigeeApiConfig struct {
-	pkg.ApigeeConfig
-	Name string
-}
-
-func Get(config pkg.ApigeeConfig, resourceType pkg.ApigeeResource, resource interface{}) (io.ReadCloser, error) {
+func Get(config ApigeeConfig, resourceType ApigeeResource, resource interface{}) (io.ReadCloser, error) {
 	var apps io.ReadCloser
 
 	switch resourceType {
-	case pkg.ApigeeApi:
-		data := resource.(pkg.Api)
+	case ApigeeApi:
+		data := resource.(Api)
 
 		baseUrl := fmt.Sprintf("%s/organizations/%s/apis/%s", config.BaseUrl, data.Organization.Name, data.Name)
 
