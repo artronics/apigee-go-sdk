@@ -10,8 +10,8 @@ func Get(resourceType ApigeeResource, resource interface{}) (body io.ReadCloser,
 	var req *http.Request
 
 	switch resourceType {
-	case Api:
-		data := resource.(ApiData)
+	case Proxy:
+		data := resource.(ProxyData)
 		req, err = data.request(get)
 
 	default:
@@ -28,7 +28,7 @@ func Get(resourceType ApigeeResource, resource interface{}) (body io.ReadCloser,
 		return body, err
 	}
 	if res.StatusCode != 200 {
-		return body, fmt.Errorf("GET request failed - %s", res.Status)
+		return body, fmt.Errorf("get resource failed - %s", res.Status)
 	}
 
 	return res.Body, nil

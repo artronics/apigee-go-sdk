@@ -13,7 +13,7 @@ type ApigeeResource int
 
 const (
 	_ ApigeeResource = iota
-	Api
+	Proxy
 )
 
 type operation int
@@ -23,6 +23,8 @@ const (
 	get
 	list
 	create
+	// update
+	deleteOpt
 )
 
 type Apigee struct {
@@ -39,7 +41,7 @@ func (o *Organization) url() string {
 	return fmt.Sprintf("%s/organizations/%s", o.BaseUrl, o.Name)
 }
 
-type ApiData struct {
+type ProxyData struct {
 	Organization
 	Name             string
 	IncludeRevisions bool
@@ -48,11 +50,11 @@ type ApiData struct {
 	Action           string
 }
 
-func (a *ApiData) url() string {
+func (a *ProxyData) url() string {
 	return fmt.Sprintf("%s/apis", a.Organization.url())
 }
 
-func (a *ApiData) request(opt operation) (req *http.Request, err error) {
+func (a *ProxyData) request(opt operation) (req *http.Request, err error) {
 	path := a.url()
 	defer func() {
 		if req != nil {
@@ -98,6 +100,10 @@ func (a *ApiData) request(opt operation) (req *http.Request, err error) {
 
 		return req, nil
 
+	case deleteOpt:
+		path = fmt.Sprintf("%s/%s", path, a.Name)
+
+		return http.NewRequest("DELETE", path, nil)
 	default:
 		panic("operation not supported")
 	}

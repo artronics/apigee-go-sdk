@@ -13,8 +13,8 @@ func Create(resourceType ApigeeResource, resource interface{}) (body io.ReadClos
 	var req *http.Request
 
 	switch resourceType {
-	case Api:
-		data := resource.(ApiData)
+	case Proxy:
+		data := resource.(ProxyData)
 		req, err = data.request(create)
 
 	default:

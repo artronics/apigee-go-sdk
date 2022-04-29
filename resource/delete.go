@@ -6,13 +6,13 @@ import (
 	"net/http"
 )
 
-func List(resourceType ApigeeResource, resource interface{}) (body io.ReadCloser, err error) {
+func Delete(resourceType ApigeeResource, resource interface{}) (body io.ReadCloser, err error) {
 	var req *http.Request
 
 	switch resourceType {
 	case Proxy:
 		data := resource.(ProxyData)
-		req, err = data.request(list)
+		req, err = data.request(deleteOpt)
 
 	default:
 		panic("unsupported/wrong Apigee resource type")
@@ -27,9 +27,8 @@ func List(resourceType ApigeeResource, resource interface{}) (body io.ReadCloser
 	if err != nil {
 		return body, err
 	}
-
 	if res.StatusCode != 200 {
-		return body, fmt.Errorf("list resource failed - %s", res.Status)
+		return body, fmt.Errorf("delete resource failed - %s", res.Status)
 	}
 
 	return res.Body, nil
