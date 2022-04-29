@@ -1,4 +1,4 @@
-package api
+package resource
 
 import (
 	"fmt"
@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"strconv"
 )
+
+var httpClient = http.Client{}
 
 type ApigeeResource int
 
@@ -51,19 +53,19 @@ func (a *ApiData) url() string {
 }
 
 func (a *ApiData) request(opt operation) (req *http.Request, err error) {
-	path := fmt.Sprintf("%s/apis", a.Organization.url())
+	path := a.url()
 	defer func() {
 		if req != nil {
 			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.Token))
 		}
 	}()
-	//headers := http.Header{}
-	//headers.Add("Authorization", fmt.Sprintf("Bearer %s", a.Token))
 
 	switch opt {
 	case get:
 		path = fmt.Sprintf("%s/%s", path, a.Name)
+
 		return http.NewRequest("GET", path, nil)
+
 	case list:
 		req, err = http.NewRequest("GET", path, nil)
 		if err != nil {
@@ -75,10 +77,28 @@ func (a *ApiData) request(opt operation) (req *http.Request, err error) {
 		q.Add("includeRevisions", strconv.FormatBool(a.IncludeRevisions))
 		req.URL.RawQuery = q.Encode()
 
+		return req, nil
+
 	case create:
+		multipartHeader, body, err := createForm("bundle", a.ZipBundle)
+		if err != nil {
+			return nil, err
+		}
+		req, err = http.NewRequest("POST", path, body)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Content-Type", multipartHeader)
+
+		q := url.Values{}
+		q.Add("name", a.Name)
+		q.Add("action", a.Action)
+		req.URL.RawQuery = q.Encode()
+
+		return req, nil
+
 	default:
 		panic("unreachable code")
 	}
-
-	return req, nil
 }

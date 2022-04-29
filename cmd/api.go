@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/artronics/apigee/api"
+	"github.com/artronics/apigee/resource"
 	"github.com/spf13/cobra"
+	"io"
 	"io/ioutil"
 	"log"
 	"strconv"
@@ -14,28 +15,19 @@ var apiCmd = &cobra.Command{
 	Short: "Manage API resource",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		var apiData api.ApiData
+		var apiData resource.ApiData
 		apiData.Token = cmd.Flags().Lookup("token").Value.String()
 		apiData.BaseUrl = cmd.Flags().Lookup("base-url").Value.String()
 		apiData.Organization.Name = cmd.Flags().Lookup("organization").Value.String()
 
-		getApi := func() string {
-			resBody, err := api.Get(api.Api, apiData)
-			if err != nil {
-				log.Fatal(err.Error())
-			}
-			body, err := ioutil.ReadAll(resBody)
-			if err != nil {
-				log.Fatal(err.Error())
-			}
-
-			return string(body)
-		}
+		var body io.ReadCloser
+		var err error
 
 		switch cmd.Parent() {
 		case getCmd:
 			apiData.Name = cmd.Flags().Lookup("name").Value.String()
-			fmt.Printf(getApi())
+
+			body, err = resource.Get(resource.Api, apiData)
 
 		case listCmd:
 			iMetadata, _ := strconv.ParseBool(cmd.Flags().Lookup("includeMetaData").Value.String())
@@ -43,25 +35,28 @@ var apiCmd = &cobra.Command{
 			apiData.IncludeMetaData = iMetadata
 			apiData.IncludeRevisions = iRevisions
 
-			fmt.Printf(getApi())
+			body, err = resource.List(resource.Api, apiData)
+
 		case createCmd:
 			apiData.Name = cmd.Flags().Lookup("name").Value.String()
 			apiData.Action = cmd.Flags().Lookup("action").Value.String()
 			apiData.ZipBundle = cmd.Flags().Lookup("bundle").Value.String()
-			resBody, err := api.Create(api.Api, apiData)
-			if err != nil {
-				log.Fatal(err.Error())
-			}
-			body, err := ioutil.ReadAll(resBody)
-			if err != nil {
-				log.Fatal(err.Error())
-			}
 
-			fmt.Println(string(body))
+			body, err = resource.Create(resource.Api, apiData)
 
 		default:
 			panic("unreachable code: command does not exist")
 		}
+
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		bodyBuf, err := ioutil.ReadAll(body)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		fmt.Println(string(bodyBuf))
 	},
 }
 
