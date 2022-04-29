@@ -1,14 +1,11 @@
 package cmd
 
 import (
-	"github.com/artronics/apigee/api"
 	"github.com/spf13/viper"
 	"os"
 
 	"github.com/spf13/cobra"
 )
-
-var config api.ApigeeConfig
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -20,10 +17,6 @@ examples and usage of using your application. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		config.Token = cmd.Flags().Lookup("token").Value.String()
-		config.BaseUrl = cmd.Flags().Lookup("base-url").Value.String()
-	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

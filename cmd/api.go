@@ -15,10 +15,12 @@ var apiCmd = &cobra.Command{
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		var apiData api.ApiData
+		apiData.Token = cmd.Flags().Lookup("token").Value.String()
+		apiData.BaseUrl = cmd.Flags().Lookup("base-url").Value.String()
 		apiData.Organization.Name = cmd.Flags().Lookup("organization").Value.String()
 
 		getApi := func() string {
-			resBody, err := api.Get(config, api.Api, apiData)
+			resBody, err := api.Get(api.Api, apiData)
 			if err != nil {
 				log.Fatal(err.Error())
 			}
@@ -46,7 +48,7 @@ var apiCmd = &cobra.Command{
 			apiData.Name = cmd.Flags().Lookup("name").Value.String()
 			apiData.Action = cmd.Flags().Lookup("action").Value.String()
 			apiData.ZipBundle = cmd.Flags().Lookup("bundle").Value.String()
-			resBody, err := api.Create(config, api.Api, apiData)
+			resBody, err := api.Create(api.Api, apiData)
 			if err != nil {
 				log.Fatal(err.Error())
 			}
