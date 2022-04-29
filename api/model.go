@@ -9,16 +9,18 @@ type ApigeeResource int
 
 const (
 	_ ApigeeResource = iota
-	ApigeeApi
+	Api
 )
 
 type Organization struct {
 	Name string
 }
 
-type Api struct {
+type ApiData struct {
 	Organization
 	Name             string
 	IncludeRevisions bool
 	IncludeMetaData  bool
+	ZipBundle        string
+	Action           string
 }

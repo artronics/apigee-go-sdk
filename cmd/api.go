@@ -14,12 +14,11 @@ var apiCmd = &cobra.Command{
 	Short: "Manage API resource",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		var apiData api.Api
+		var apiData api.ApiData
+		apiData.Organization.Name = cmd.Flags().Lookup("organization").Value.String()
 
 		getApi := func() string {
-			apiData.Organization.Name = cmd.Flags().Lookup("organization").Value.String()
-
-			resBody, err := api.Get(config, api.ApigeeApi, apiData)
+			resBody, err := api.Get(config, api.Api, apiData)
 			if err != nil {
 				log.Fatal(err.Error())
 			}
@@ -44,7 +43,19 @@ var apiCmd = &cobra.Command{
 
 			fmt.Printf(getApi())
 		case createCmd:
-			log.Printf("creating api")
+			apiData.Name = cmd.Flags().Lookup("name").Value.String()
+			apiData.Action = cmd.Flags().Lookup("action").Value.String()
+			apiData.ZipBundle = cmd.Flags().Lookup("bundle").Value.String()
+			resBody, err := api.Create(config, api.Api, apiData)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+			body, err := ioutil.ReadAll(resBody)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+
+			fmt.Println(string(body))
 
 		default:
 			panic("unreachable code: command does not exist")
@@ -53,21 +64,34 @@ var apiCmd = &cobra.Command{
 }
 
 func init() {
+	addNameFlag := func(cmd *cobra.Command, required bool) {
+		cmd.Flags().StringP("name", "n", "", "Name of the API proxy. Restrict the characters used to: A-Za-z0-9._-")
+		if required {
+			_ = cmd.MarkFlagRequired("name")
+		}
+	}
+
+	// get
 	getApiCmd := *apiCmd
 	commonFlags(&getApiCmd)
-	getApiCmd.Flags().StringP("name", "n", "", "API name")
-	_ = getApiCmd.MarkFlagRequired("name")
+	addNameFlag(&getApiCmd, true)
 
+	// list
 	listApiCmd := *apiCmd
 	commonFlags(&listApiCmd)
 	listApiCmd.Flags().Bool("includeMetaData", false, "include metadata")
 	listApiCmd.Flags().Bool("includeRevisions", false, "include revisions")
 
+	// create
 	createApiCmd := *apiCmd
 	commonFlags(&createApiCmd)
-	createApiCmd.Flags().StringP("name", "n", "", "API name")
-	_ = createApiCmd.MarkFlagRequired("name")
+	addNameFlag(&createApiCmd, true)
+	createApiCmd.Flags().String("action", "", `Action to perform when importing an API proxy configuration bundle. Set this parameter to one of "import" or "validate"`)
+	_ = createApiCmd.MarkFlagRequired("action")
+	createApiCmd.Flags().String("bundle", "", "path to the zip file of proxy bundle")
+	_ = createApiCmd.MarkFlagRequired("bundle")
 
+	// add commands
 	getCmd.AddCommand(&getApiCmd)
 	listCmd.AddCommand(&listApiCmd)
 	createCmd.AddCommand(&createApiCmd)
