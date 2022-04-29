@@ -99,6 +99,6 @@ func (a *ApiData) request(opt operation) (req *http.Request, err error) {
 		return req, nil
 
 	default:
-		panic("unreachable code")
+		panic("operation not supported")
 	}
 }

@@ -18,7 +18,7 @@ func Create(resourceType ApigeeResource, resource interface{}) (body io.ReadClos
 		req, err = data.request(create)
 
 	default:
-		panic("unsupported Apigee resource type")
+		panic("unsupported/wrong Apigee resource type")
 	}
 
 	if err != nil {
