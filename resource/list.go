@@ -14,6 +14,10 @@ func List(resourceType ApigeeResource, resource interface{}) (body io.ReadCloser
 		data := resource.(ProxyData)
 		req, err = data.request(list)
 
+	case App:
+		data := resource.(AppData)
+		req, err = data.request(list)
+
 	default:
 		panic("unsupported/wrong Apigee resource type")
 	}

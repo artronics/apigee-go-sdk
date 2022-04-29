@@ -77,12 +77,16 @@ func init() {
 	commonFlags(&getProxyCmd)
 	addNameFlag(&getProxyCmd, true)
 
+	getCmd.AddCommand(&getProxyCmd)
+
 	// list
 	listProxyCmd := *proxyCmd
 	listProxyCmd.Aliases = append(listProxyCmd.Aliases, "proxies")
 	commonFlags(&listProxyCmd)
 	listProxyCmd.Flags().Bool("includeMetaData", false, "include metadata")
 	listProxyCmd.Flags().Bool("includeRevisions", false, "include revisions")
+
+	listCmd.AddCommand(&listProxyCmd)
 
 	// create
 	createProxyCmd := *proxyCmd
@@ -93,19 +97,14 @@ func init() {
 	createProxyCmd.Flags().String("bundle", "", "path to the zip file of proxy bundle")
 	_ = createProxyCmd.MarkFlagRequired("bundle")
 
+	createCmd.AddCommand(&createProxyCmd)
+
+	// TODO: update
+
 	// delete
 	deleteProxyCmd := *proxyCmd
 	commonFlags(&deleteProxyCmd)
 	addNameFlag(&deleteProxyCmd, true)
 
-	// add commands
-	getCmd.AddCommand(&getProxyCmd)
-	listCmd.AddCommand(&listProxyCmd)
-	createCmd.AddCommand(&createProxyCmd)
 	deleteCmd.AddCommand(&deleteProxyCmd)
-}
-
-func commonFlags(cmd *cobra.Command) {
-	cmd.Flags().StringP("organization", "o", "", "Apigee account organization")
-	_ = cmd.MarkFlagRequired("organization")
 }
